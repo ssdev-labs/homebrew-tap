@@ -3,24 +3,23 @@ cask "ssdev-cairn" do
   version "0.1.0"
 
   on_macos do
-    on_intel do
-      sha256 "78e702b4b4dd12e14950a23f71b30162ee0469c12c350c61846df1569d017d88"
-      url "https://github.com/yahuo/homebrew-tap/releases/download/ssdev-cairn-v#{version}/ssdev-cairn_#{version}_darwin_amd64.tar.gz"
-    end
     on_arm do
       sha256 "f8e1de2f13514640e305d378e085a52a40a9dc6411175da23a9ff464b953bf0e"
       url "https://github.com/yahuo/homebrew-tap/releases/download/ssdev-cairn-v#{version}/ssdev-cairn_#{version}_darwin_arm64.tar.gz"
     end
-  end
-
-  on_linux do
     on_intel do
-      sha256 "90211d0ae2900ae50320890b23ecd1da554b973935ce04776588e6304b3453ab"
-      url "https://github.com/yahuo/homebrew-tap/releases/download/ssdev-cairn-v#{version}/ssdev-cairn_#{version}_linux_amd64.tar.gz"
+      sha256 "78e702b4b4dd12e14950a23f71b30162ee0469c12c350c61846df1569d017d88"
+      url "https://github.com/yahuo/homebrew-tap/releases/download/ssdev-cairn-v#{version}/ssdev-cairn_#{version}_darwin_amd64.tar.gz"
     end
+  end
+  on_linux do
     on_arm do
       sha256 "76fc6186b26a4690f4e06395bad78dce54b1b1d1012544f9243a5e14f363b243"
       url "https://github.com/yahuo/homebrew-tap/releases/download/ssdev-cairn-v#{version}/ssdev-cairn_#{version}_linux_arm64.tar.gz"
+    end
+    on_intel do
+      sha256 "90211d0ae2900ae50320890b23ecd1da554b973935ce04776588e6304b3453ab"
+      url "https://github.com/yahuo/homebrew-tap/releases/download/ssdev-cairn-v#{version}/ssdev-cairn_#{version}_linux_amd64.tar.gz"
     end
   end
 
