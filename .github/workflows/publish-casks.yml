@@ -37,6 +37,8 @@ jobs:
             echo "::error::release $RELEASE_TAG does not contain a cask"
             exit 1
           fi
+      - name: Update Homebrew
+        run: brew update
       - name: Format and audit casks
         run: |
           brew tap-new yahuo/release-validation
