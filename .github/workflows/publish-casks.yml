@@ -21,7 +21,7 @@ jobs:
     steps:
       - name: Check out tap
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-      - name: Download generated casks
+      - name: Download generated package files
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
@@ -29,12 +29,21 @@ jobs:
             echo "::error::repository_dispatch payload must include a release tag"
             exit 1
           fi
-          mkdir -p "$RUNNER_TEMP/release-casks"
+          patterns=(--pattern '*.rb')
+          if [[ "$RELEASE_TAG" == ssdev-cairn-v* ]]; then
+            patterns+=(--pattern 'install.ps1')
+          fi
+          mkdir -p "$RUNNER_TEMP/release-files"
           gh release download "$RELEASE_TAG" \
-            --pattern '*.rb' \
-            --dir "$RUNNER_TEMP/release-casks"
-          if ! compgen -G "$RUNNER_TEMP/release-casks/*.rb" >/dev/null; then
+            "${patterns[@]}" \
+            --dir "$RUNNER_TEMP/release-files"
+          if ! compgen -G "$RUNNER_TEMP/release-files/*.rb" >/dev/null; then
             echo "::error::release $RELEASE_TAG does not contain a cask"
+            exit 1
+          fi
+          if [[ "$RELEASE_TAG" == ssdev-cairn-v* ]] &&
+            [[ ! -f "$RUNNER_TEMP/release-files/install.ps1" ]]; then
+            echo "::error::release $RELEASE_TAG does not contain install.ps1"
             exit 1
           fi
       - name: Update Homebrew
@@ -44,7 +53,7 @@ jobs:
           brew tap-new yahuo/release-validation
           validation_tap="$(brew --repo yahuo/release-validation)"
           mkdir -p "$validation_tap/Casks" Casks
-          for cask in "$RUNNER_TEMP"/release-casks/*.rb; do
+          for cask in "$RUNNER_TEMP"/release-files/*.rb; do
             token="$(basename "$cask" .rb)"
             cp "$cask" "$validation_tap/Casks/$token.rb"
             brew style --fix --cask "yahuo/release-validation/$token"
@@ -52,13 +61,22 @@ jobs:
             brew audit --cask --strict "yahuo/release-validation/$token"
             cp "$validation_tap/Casks/$token.rb" "Casks/$token.rb"
           done
-      - name: Commit casks
+      - name: Update public installers
         run: |
-          git add Casks
+          if [[ "$RELEASE_TAG" == ssdev-cairn-v* ]]; then
+            if grep -Fq '__SSDEV_CAIRN_VERSION__' "$RUNNER_TEMP/release-files/install.ps1"; then
+              echo "::error::install.ps1 still contains its version placeholder"
+              exit 1
+            fi
+            cp "$RUNNER_TEMP/release-files/install.ps1" install.ps1
+          fi
+      - name: Commit package files
+        run: |
+          git add Casks install.ps1
           if git diff --cached --quiet; then
             exit 0
           fi
           git config user.name "yahuo tap release bot"
           git config user.email "actions@github.com"
-          git commit -m "tap: publish $RELEASE_TAG"
+          git commit -m "chore(tap): 发布 $RELEASE_TAG"
           git push origin master
