@@ -3,23 +3,24 @@ cask "ssdev-cairn" do
   version "0.1.0"
 
   on_macos do
-    on_arm do
-      sha256 "7b3aa94db878ebd2965cdaa56a4e2c467a255c4c27ea175b6c86b4504663ff57"
-      url "https://github.com/yahuo/homebrew-tap/releases/download/ssdev-cairn-v0.1.0/ssdev-cairn_#{version}_darwin_arm64.tar.gz"
-    end
     on_intel do
-      sha256 "f477517cf460bc5383f1d489c4dec2859662af86fed063afb8d39fc148569f35"
-      url "https://github.com/yahuo/homebrew-tap/releases/download/ssdev-cairn-v0.1.0/ssdev-cairn_#{version}_darwin_amd64.tar.gz"
+      sha256 "78e702b4b4dd12e14950a23f71b30162ee0469c12c350c61846df1569d017d88"
+      url "https://github.com/yahuo/homebrew-tap/releases/download/ssdev-cairn-v#{version}/ssdev-cairn_#{version}_darwin_amd64.tar.gz"
+    end
+    on_arm do
+      sha256 "f8e1de2f13514640e305d378e085a52a40a9dc6411175da23a9ff464b953bf0e"
+      url "https://github.com/yahuo/homebrew-tap/releases/download/ssdev-cairn-v#{version}/ssdev-cairn_#{version}_darwin_arm64.tar.gz"
     end
   end
+
   on_linux do
-    on_arm do
-      sha256 "4738d3f36944615acdf77e769b98cfc691ffa43cbd8d6fdfb065e73d3b2c1516"
-      url "https://github.com/yahuo/homebrew-tap/releases/download/ssdev-cairn-v0.1.0/ssdev-cairn_#{version}_linux_arm64.tar.gz"
-    end
     on_intel do
-      sha256 "d9ab46371adc83f98c36c554fa87fabbf3be4f6468d2551254c9d624a4832508"
-      url "https://github.com/yahuo/homebrew-tap/releases/download/ssdev-cairn-v0.1.0/ssdev-cairn_#{version}_linux_amd64.tar.gz"
+      sha256 "90211d0ae2900ae50320890b23ecd1da554b973935ce04776588e6304b3453ab"
+      url "https://github.com/yahuo/homebrew-tap/releases/download/ssdev-cairn-v#{version}/ssdev-cairn_#{version}_linux_amd64.tar.gz"
+    end
+    on_arm do
+      sha256 "76fc6186b26a4690f4e06395bad78dce54b1b1d1012544f9243a5e14f363b243"
+      url "https://github.com/yahuo/homebrew-tap/releases/download/ssdev-cairn-v#{version}/ssdev-cairn_#{version}_linux_arm64.tar.gz"
     end
   end
 
@@ -31,10 +32,10 @@ cask "ssdev-cairn" do
     skip "Auto-generated on release."
   end
 
-  binary "ssdev-cairn"
+  binary "git-cairn"
 
   postflight do
-    system_command "/usr/bin/xattr", args: ["-dr", "com.apple.quarantine", "#{staged_path}/ssdev-cairn"] if OS.mac?
+    system_command "/usr/bin/xattr", args: ["-dr", "com.apple.quarantine", "#{staged_path}/git-cairn"] if OS.mac?
   end
 
   # No zap stanza required
