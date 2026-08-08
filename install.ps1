@@ -1,10 +1,14 @@
 [CmdletBinding()]
 param(
-    [string]$Version = "0.5.0"
+    [string]$Version = "0.6.0",
+    [switch]$Uninstall
 )
 
 & {
-    param([string]$ReleaseVersion)
+    param(
+        [string]$ReleaseVersion,
+        [bool]$RemoveRequested
+    )
 
     Set-StrictMode -Version Latest
     $ErrorActionPreference = "Stop"
@@ -14,6 +18,88 @@ param(
     }
     if ($env:OS -ne "Windows_NT") {
         throw "This installer only supports Windows."
+    }
+    if ([string]::IsNullOrWhiteSpace($env:LOCALAPPDATA)) {
+        throw "LOCALAPPDATA is not available."
+    }
+
+    function Get-NormalizedPathEntry {
+        param([string]$PathEntry)
+
+        if ([string]::IsNullOrWhiteSpace($PathEntry)) {
+            return ""
+        }
+        $trimmed = $PathEntry.Trim()
+        if ($trimmed.Length -ge 2 -and $trimmed[0] -eq '"' -and $trimmed[$trimmed.Length - 1] -eq '"') {
+            $trimmed = $trimmed.Substring(1, $trimmed.Length - 2)
+        }
+        return [Environment]::ExpandEnvironmentVariables($trimmed).TrimEnd([char[]]"\/")
+    }
+
+    function Test-PathContainsEntry {
+        param(
+            [AllowNull()][string]$PathValue,
+            [string]$ExpectedEntry
+        )
+
+        $normalizedExpected = Get-NormalizedPathEntry $ExpectedEntry
+        foreach ($entry in @($PathValue -split ";")) {
+            if ((Get-NormalizedPathEntry $entry) -ieq $normalizedExpected) {
+                return $true
+            }
+        }
+        return $false
+    }
+
+    function Remove-PathEntry {
+        param(
+            [AllowNull()][string]$PathValue,
+            [string]$EntryToRemove
+        )
+
+        if ([string]::IsNullOrWhiteSpace($PathValue)) {
+            return ""
+        }
+        $normalizedRemoval = Get-NormalizedPathEntry $EntryToRemove
+        $remaining = @(
+            foreach ($entry in @($PathValue -split ";")) {
+                if ([string]::IsNullOrWhiteSpace($entry)) {
+                    continue
+                }
+                if ((Get-NormalizedPathEntry $entry) -ine $normalizedRemoval) {
+                    $entry
+                }
+            }
+        )
+        return $remaining -join ";"
+    }
+
+    $installDirectory = Join-Path $env:LOCALAPPDATA "Programs\ssdev-cairn"
+    if ($RemoveRequested) {
+        $installedExecutable = Join-Path $installDirectory "git-cairn.exe"
+        if (Test-Path -LiteralPath $installedExecutable -PathType Leaf) {
+            & $installedExecutable uninstall --all
+            if ($LASTEXITCODE -ne 0) {
+                throw "git-cairn.exe could not remove the installed integrations."
+            }
+        }
+
+        $userPath = [Environment]::GetEnvironmentVariable("Path", "User")
+        if (Test-PathContainsEntry $userPath $installDirectory) {
+            [Environment]::SetEnvironmentVariable("Path", (Remove-PathEntry $userPath $installDirectory), "User")
+        }
+        $env:Path = Remove-PathEntry $env:Path $installDirectory
+        if (Test-Path -LiteralPath $installDirectory) {
+            Remove-Item -LiteralPath $installDirectory -Recurse -Force
+        }
+        if (Test-Path -LiteralPath $installDirectory) {
+            throw "The ssdev-cairn installation directory still exists after uninstall."
+        }
+        if (Test-PathContainsEntry ([Environment]::GetEnvironmentVariable("Path", "User")) $installDirectory) {
+            throw "The ssdev-cairn installation directory remains in the user PATH."
+        }
+        Write-Output "Uninstalled ssdev-cairn from $installDirectory"
+        return
     }
 
     $ReleaseVersion = $ReleaseVersion.Trim().TrimStart("v")
@@ -36,13 +122,9 @@ param(
     if ($null -eq $git) {
         throw "Git for Windows is required. Install it from https://git-scm.com/download/win and try again."
     }
-    if ([string]::IsNullOrWhiteSpace($env:LOCALAPPDATA)) {
-        throw "LOCALAPPDATA is not available."
-    }
 
     $archiveName = "ssdev-cairn_${ReleaseVersion}_windows_${architecture}.zip"
     $releaseBaseUrl = "https://github.com/yahuo/homebrew-tap/releases/download/ssdev-cairn-v$ReleaseVersion"
-    $installDirectory = Join-Path $env:LOCALAPPDATA "Programs\ssdev-cairn"
     $temporaryDirectory = Join-Path ([IO.Path]::GetTempPath()) ("ssdev-cairn-" + [Guid]::NewGuid().ToString("N"))
     $archivePath = Join-Path $temporaryDirectory $archiveName
     $checksumsPath = Join-Path $temporaryDirectory "checksums.txt"
@@ -89,34 +171,6 @@ param(
             Copy-Item -LiteralPath $stagedReadme -Destination (Join-Path $installDirectory "README.md") -Force
         }
 
-        function Get-NormalizedPathEntry {
-            param([string]$PathEntry)
-
-            if ([string]::IsNullOrWhiteSpace($PathEntry)) {
-                return ""
-            }
-            $trimmed = $PathEntry.Trim()
-            if ($trimmed.Length -ge 2 -and $trimmed[0] -eq '"' -and $trimmed[$trimmed.Length - 1] -eq '"') {
-                $trimmed = $trimmed.Substring(1, $trimmed.Length - 2)
-            }
-            return [Environment]::ExpandEnvironmentVariables($trimmed).TrimEnd([char[]]"\/")
-        }
-
-        function Test-PathContainsEntry {
-            param(
-                [AllowNull()][string]$PathValue,
-                [string]$ExpectedEntry
-            )
-
-            $normalizedExpected = Get-NormalizedPathEntry $ExpectedEntry
-            foreach ($entry in @($PathValue -split ";")) {
-                if ((Get-NormalizedPathEntry $entry) -ieq $normalizedExpected) {
-                    return $true
-                }
-            }
-            return $false
-        }
-
         $userPath = [Environment]::GetEnvironmentVariable("Path", "User")
         if (-not (Test-PathContainsEntry $userPath $installDirectory)) {
             $updatedUserPath = if ([string]::IsNullOrWhiteSpace($userPath)) {
@@ -145,4 +199,4 @@ param(
             Remove-Item -LiteralPath $temporaryDirectory -Recurse -Force -ErrorAction SilentlyContinue
         }
     }
-} $Version
+} $Version $Uninstall.IsPresent
