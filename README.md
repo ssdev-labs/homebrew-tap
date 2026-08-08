@@ -22,6 +22,51 @@ irm https://raw.githubusercontent.com/yahuo/homebrew-tap/master/install.ps1 | ie
 
 公开安装脚本会锁定至最新发布的 ssdev-cairn 版本，使用 `checksums.txt` 校验所选的 Windows 压缩包，并以幂等方式更新用户的 `PATH`。
 
+## 卸载
+
+### Project 卸载
+
+只停用当前 Git 项目，保留全局 Agent 集成和 `git-cairn` 二进制：
+
+```sh
+git cairn uninit .
+```
+
+也可以指定项目路径：
+
+```sh
+git cairn uninit /path/to/repository
+```
+
+### 全局卸载
+
+清理所有已登记项目和全局 Agent 集成，但保留 `git-cairn` 二进制：
+
+```sh
+git cairn uninstall --all
+```
+
+### macOS 完整卸载
+
+通过 Homebrew 安装时，使用 `--zap` 清理全部集成并删除二进制：
+
+```sh
+brew uninstall --cask --zap ssdev-cairn
+```
+
+普通的 `brew uninstall --cask ssdev-cairn` 只删除二进制，不会清理已登记项目和全局 Agent 集成。
+
+### Windows 完整卸载
+
+使用公开安装脚本的 `-Uninstall` 参数：
+
+```powershell
+$installer = irm https://raw.githubusercontent.com/yahuo/homebrew-tap/master/install.ps1
+& ([ScriptBlock]::Create($installer)) -Uninstall
+```
+
+脚本会先执行全局集成清理，再删除安装目录和用户 `PATH` 中对应的安装项。
+
 ## 软件包
 
 | 软件包 | 说明 |
