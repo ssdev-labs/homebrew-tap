@@ -5,27 +5,27 @@ cask "ssdev-cairn" do
   on_macos do
     on_arm do
       sha256 "d2df8e52e57aab6e294fbea50cbab6bd927908eef6cd393d3a3a447345a23454"
-      url "https://github.com/yahuo/homebrew-tap/releases/download/ssdev-cairn-v#{version}/ssdev-cairn_#{version}_darwin_arm64.tar.gz"
+      url "https://github.com/ssdev-labs/homebrew-tap/releases/download/ssdev-cairn-v#{version}/ssdev-cairn_#{version}_darwin_arm64.tar.gz"
     end
     on_intel do
       sha256 "c639e1cb0f0d3fb66376af1cc1598046804a78462f078775ce0e7689c60ab44c"
-      url "https://github.com/yahuo/homebrew-tap/releases/download/ssdev-cairn-v#{version}/ssdev-cairn_#{version}_darwin_amd64.tar.gz"
+      url "https://github.com/ssdev-labs/homebrew-tap/releases/download/ssdev-cairn-v#{version}/ssdev-cairn_#{version}_darwin_amd64.tar.gz"
     end
   end
   on_linux do
     on_arm do
       sha256 "cd6055aba6511d03d498137d1bc32a2abb364f0070f1bf5103e58edaf3410b5a"
-      url "https://github.com/yahuo/homebrew-tap/releases/download/ssdev-cairn-v#{version}/ssdev-cairn_#{version}_linux_arm64.tar.gz"
+      url "https://github.com/ssdev-labs/homebrew-tap/releases/download/ssdev-cairn-v#{version}/ssdev-cairn_#{version}_linux_arm64.tar.gz"
     end
     on_intel do
       sha256 "c689775d70ceb422bb23585174192ebd0a63827a23791212308829d4bdefd336"
-      url "https://github.com/yahuo/homebrew-tap/releases/download/ssdev-cairn-v#{version}/ssdev-cairn_#{version}_linux_amd64.tar.gz"
+      url "https://github.com/ssdev-labs/homebrew-tap/releases/download/ssdev-cairn-v#{version}/ssdev-cairn_#{version}_linux_amd64.tar.gz"
     end
   end
 
   name "ssdev-cairn"
   desc "Add local AI coding context to Git commit messages"
-  homepage "https://github.com/yahuo/homebrew-tap"
+  homepage "https://github.com/ssdev-labs/homebrew-tap"
 
   livecheck do
     skip "Auto-generated on release."

@@ -124,7 +124,7 @@ param(
     }
 
     $archiveName = "ssdev-cairn_${ReleaseVersion}_windows_${architecture}.zip"
-    $releaseBaseUrl = "https://github.com/yahuo/homebrew-tap/releases/download/ssdev-cairn-v$ReleaseVersion"
+    $releaseBaseUrl = "https://github.com/ssdev-labs/homebrew-tap/releases/download/ssdev-cairn-v$ReleaseVersion"
     $temporaryDirectory = Join-Path ([IO.Path]::GetTempPath()) ("ssdev-cairn-" + [Guid]::NewGuid().ToString("N"))
     $archivePath = Join-Path $temporaryDirectory $archiveName
     $checksumsPath = Join-Path $temporaryDirectory "checksums.txt"

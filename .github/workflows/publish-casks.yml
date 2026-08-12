@@ -50,15 +50,15 @@ jobs:
         run: brew update
       - name: Format and audit casks
         run: |
-          brew tap-new yahuo/release-validation
-          validation_tap="$(brew --repo yahuo/release-validation)"
+          brew tap-new ssdev-labs/release-validation
+          validation_tap="$(brew --repo ssdev-labs/release-validation)"
           mkdir -p "$validation_tap/Casks" Casks
           for cask in "$RUNNER_TEMP"/release-files/*.rb; do
             token="$(basename "$cask" .rb)"
             cp "$cask" "$validation_tap/Casks/$token.rb"
-            brew style --fix --cask "yahuo/release-validation/$token"
-            brew style --cask "yahuo/release-validation/$token"
-            brew audit --cask --strict "yahuo/release-validation/$token"
+            brew style --fix --cask "ssdev-labs/release-validation/$token"
+            brew style --cask "ssdev-labs/release-validation/$token"
+            brew audit --cask --strict "ssdev-labs/release-validation/$token"
             cp "$validation_tap/Casks/$token.rb" "Casks/$token.rb"
           done
       - name: Update public installers
@@ -76,7 +76,7 @@ jobs:
           if git diff --cached --quiet; then
             exit 0
           fi
-          git config user.name "yahuo tap release bot"
+          git config user.name "ssdev-labs tap release bot"
           git config user.email "actions@github.com"
           git commit -m "chore(tap): 发布 $RELEASE_TAG"
           git push origin master

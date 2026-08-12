@@ -1,13 +1,13 @@
 # Homebrew Tap
 
-用于发布 `yahuo` 软件包的公开 Homebrew cask 和发行文件。
+用于发布 `ssdev-labs` 软件包的公开 Homebrew cask 和发行文件。
 
 ## 安装
 
 ### macOS
 
 ```sh
-brew install --cask yahuo/tap/ssdev-cairn
+brew install --cask ssdev-labs/tap/ssdev-cairn
 ```
 
 使用完整的 cask 名称会自动添加此 tap，并且只信任指定的软件包。
@@ -17,7 +17,7 @@ brew install --cask yahuo/tap/ssdev-cairn
 先安装 Git for Windows，然后在 PowerShell 中运行以下命令：
 
 ```powershell
-irm https://raw.githubusercontent.com/yahuo/homebrew-tap/master/install.ps1 | iex
+irm https://raw.githubusercontent.com/ssdev-labs/homebrew-tap/master/install.ps1 | iex
 ```
 
 公开安装脚本会锁定至最新发布的 ssdev-cairn 版本，使用 `checksums.txt` 校验所选的 Windows 压缩包，并以幂等方式更新用户的 `PATH`。
@@ -61,7 +61,7 @@ brew uninstall --cask --zap ssdev-cairn
 使用公开安装脚本的 `-Uninstall` 参数：
 
 ```powershell
-$installer = irm https://raw.githubusercontent.com/yahuo/homebrew-tap/master/install.ps1
+$installer = irm https://raw.githubusercontent.com/ssdev-labs/homebrew-tap/master/install.ps1
 & ([ScriptBlock]::Create($installer)) -Uninstall
 ```
 
