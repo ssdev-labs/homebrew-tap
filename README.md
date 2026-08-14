@@ -12,6 +12,18 @@ brew install --cask ssdev-labs/tap/ssdev-cairn
 
 使用完整的 cask 名称会自动添加此 tap，并且只信任指定的软件包。
 
+### Linux
+
+先安装 Git、`curl`、`tar` 和 `sha256sum`，然后运行：
+
+```sh
+curl -fsSL https://raw.githubusercontent.com/ssdev-labs/homebrew-tap/master/install.sh | sh
+```
+
+公开安装脚本会锁定至最新发布的 ssdev-cairn 版本，识别 amd64/arm64，使用
+`checksums.txt` 校验 Linux 压缩包，并幂等安装到 `~/.local/bin`。如果该目录尚未
+加入 `PATH`，脚本会输出需要执行的命令。重新运行同一条命令即可升级。
+
 ### Windows
 
 先安装 Git for Windows，然后在 PowerShell 中运行以下命令：
@@ -55,6 +67,15 @@ brew uninstall --cask --zap ssdev-cairn
 ```
 
 普通的 `brew uninstall --cask ssdev-cairn` 只删除二进制，不会清理已登记项目和全局 Agent 集成。
+
+### Linux 完整卸载
+
+先清理全部集成，再删除安装器写入的二进制：
+
+```sh
+git cairn uninstall --all
+rm "$HOME/.local/bin/git-cairn"
+```
 
 ### Windows 完整卸载
 

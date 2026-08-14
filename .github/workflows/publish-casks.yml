@@ -31,7 +31,7 @@ jobs:
           fi
           patterns=(--pattern '*.rb')
           if [[ "$RELEASE_TAG" == ssdev-cairn-v* ]]; then
-            patterns+=(--pattern 'install.ps1')
+            patterns+=(--pattern 'install.ps1' --pattern 'install.sh')
           fi
           mkdir -p "$RUNNER_TEMP/release-files"
           gh release download "$RELEASE_TAG" \
@@ -44,6 +44,11 @@ jobs:
           if [[ "$RELEASE_TAG" == ssdev-cairn-v* ]] &&
             [[ ! -f "$RUNNER_TEMP/release-files/install.ps1" ]]; then
             echo "::error::release $RELEASE_TAG does not contain install.ps1"
+            exit 1
+          fi
+          if [[ "$RELEASE_TAG" == ssdev-cairn-v* ]] &&
+            [[ ! -f "$RUNNER_TEMP/release-files/install.sh" ]]; then
+            echo "::error::release $RELEASE_TAG does not contain install.sh"
             exit 1
           fi
       - name: Update Homebrew
@@ -64,15 +69,18 @@ jobs:
       - name: Update public installers
         run: |
           if [[ "$RELEASE_TAG" == ssdev-cairn-v* ]]; then
-            if grep -Fq '__SSDEV_CAIRN_VERSION__' "$RUNNER_TEMP/release-files/install.ps1"; then
-              echo "::error::install.ps1 still contains its version placeholder"
-              exit 1
-            fi
-            cp "$RUNNER_TEMP/release-files/install.ps1" install.ps1
+            for installer in install.ps1 install.sh; do
+              if grep -Fq '__SSDEV_CAIRN_VERSION__' "$RUNNER_TEMP/release-files/$installer"; then
+                echo "::error::$installer still contains its version placeholder"
+                exit 1
+              fi
+              cp "$RUNNER_TEMP/release-files/$installer" "$installer"
+            done
+            sh -n install.sh
           fi
       - name: Commit package files
         run: |
-          git add Casks install.ps1
+          git add Casks install.ps1 install.sh
           if git diff --cached --quiet; then
             exit 0
           fi
