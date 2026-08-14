@@ -2,7 +2,7 @@
 
 set -eu
 
-version="0.9.0"
+version="1.0.0"
 
 fail() {
   printf 'ssdev-cairn: %s\n' "$*" >&2
