@@ -65,7 +65,7 @@ jobs:
           installer="$RUNNER_TEMP/release-files/ssdev-wecanfixeverything.ps1"
           if ! grep -Fqx "  version \"$version\"" "$cask" ||
             ! grep -Fqx "  sha256 \"$dmg_sha\"" "$cask" ||
-            ! grep -Fqx "    [string]\\\$Version = \"$version\"," "$installer"; then
+            ! grep -Fqx "    [string]\$Version = \"$version\"," "$installer"; then
             echo "::error::release package files do not match $RELEASE_TAG"
             exit 1
           fi
