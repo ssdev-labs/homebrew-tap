@@ -76,6 +76,7 @@ jobs:
         run: |
           brew tap-new ssdev-labs/release-validation
           validation_tap="$(brew --repo ssdev-labs/release-validation)"
+          mkdir -p "$validation_tap/Casks"
           cp Casks/ssdev-wecanfixeverything.rb "$validation_tap/Casks/"
           brew style --fix --cask ssdev-labs/release-validation/ssdev-wecanfixeverything
           brew style --cask ssdev-labs/release-validation/ssdev-wecanfixeverything
