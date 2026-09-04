@@ -1,0 +1,164 @@
+name: Publish WeCanFixEverything
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Public release tag such as ssdev-wecanfixeverything-v0.6.0
+        required: true
+        type: string
+  repository_dispatch:
+    types:
+      - publish-wecanfixeverything
+
+permissions:
+  contents: write
+
+concurrency:
+  group: homebrew-tap-casks
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: macos-latest
+    timeout-minutes: 15
+    env:
+      RELEASE_TAG: ${{ inputs.tag || github.event.client_payload.tag }}
+    steps:
+      - name: Check out tap
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Download and validate public release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if [[ ! "$RELEASE_TAG" =~ ^ssdev-wecanfixeverything-v[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?$ ]]; then
+            echo "::error::invalid release tag: $RELEASE_TAG"
+            exit 1
+          fi
+          mkdir -p "$RUNNER_TEMP/release-files"
+          gh release download "$RELEASE_TAG" \
+            --pattern SHA256SUMS.txt \
+            --pattern ssdev-wecanfixanything-macos-universal.dmg \
+            --pattern ssdev-wecanfixanything-windows-x64-setup.exe \
+            --pattern ssdev-wecanfixeverything.rb \
+            --pattern ssdev-wecanfixeverything.ps1 \
+            --dir "$RUNNER_TEMP/release-files"
+
+          cd "$RUNNER_TEMP/release-files"
+          for asset in \
+            ssdev-wecanfixanything-macos-universal.dmg \
+            ssdev-wecanfixanything-windows-x64-setup.exe; do
+            checksum_line="$(awk -v name="$asset" '$2 == name { count++; line = $0 } END { if (count == 1) print line }' SHA256SUMS.txt)"
+            if [[ -z "$checksum_line" ]]; then
+              echo "::error::SHA256SUMS.txt must contain exactly one entry for $asset"
+              exit 1
+            fi
+            printf '%s\n' "$checksum_line" | shasum -a 256 -c -
+          done
+      - name: Update package files
+        run: |
+          version="${RELEASE_TAG#ssdev-wecanfixeverything-v}"
+          dmg_name="ssdev-wecanfixanything-macos-universal.dmg"
+          dmg_sha="$(awk -v name="$dmg_name" '$2 == name { print $1 }' "$RUNNER_TEMP/release-files/SHA256SUMS.txt")"
+
+          cask="$RUNNER_TEMP/release-files/ssdev-wecanfixeverything.rb"
+          installer="$RUNNER_TEMP/release-files/ssdev-wecanfixeverything.ps1"
+          if ! grep -Fqx "  version \"$version\"" "$cask" ||
+            ! grep -Fqx "  sha256 \"$dmg_sha\"" "$cask" ||
+            ! grep -Fqx "    [string]\\\$Version = \"$version\"," "$installer"; then
+            echo "::error::release package files do not match $RELEASE_TAG"
+            exit 1
+          fi
+
+          cp "$cask" Casks/ssdev-wecanfixeverything.rb
+          cp "$installer" installers/ssdev-wecanfixeverything.ps1
+      - name: Format and audit cask
+        run: |
+          brew tap-new ssdev-labs/release-validation
+          validation_tap="$(brew --repo ssdev-labs/release-validation)"
+          cp Casks/ssdev-wecanfixeverything.rb "$validation_tap/Casks/"
+          brew style --fix --cask ssdev-labs/release-validation/ssdev-wecanfixeverything
+          brew style --cask ssdev-labs/release-validation/ssdev-wecanfixeverything
+          brew audit --cask --strict ssdev-labs/release-validation/ssdev-wecanfixeverything
+          cp "$validation_tap/Casks/ssdev-wecanfixeverything.rb" Casks/
+      - name: Commit package files
+        run: |
+          git add Casks/ssdev-wecanfixeverything.rb installers/ssdev-wecanfixeverything.ps1
+          if git diff --cached --quiet; then
+            exit 0
+          fi
+          git config user.name "ssdev-labs tap release bot"
+          git config user.email "actions@github.com"
+          git commit -m "chore(tap): 发布 $RELEASE_TAG"
+          git push origin master
+
+  verify-macos:
+    needs: publish
+    runs-on: macos-latest
+    timeout-minutes: 15
+    env:
+      RELEASE_TAG: ${{ inputs.tag || github.event.client_payload.tag }}
+    steps:
+      - name: Install from the public tap
+        run: |
+          expected_version="${RELEASE_TAG#ssdev-wecanfixeverything-v}"
+          brew tap ssdev-labs/tap
+          brew install --cask ssdev-labs/tap/ssdev-wecanfixeverything
+          sudo /usr/bin/xattr -dr com.apple.quarantine "/Applications/WeCanFixEverything.app"
+
+          app_version="$(plutil -extract CFBundleShortVersionString raw /Applications/WeCanFixEverything.app/Contents/Info.plist)"
+          cli_version="$(ssdev-wecanfixeverything-cli --json version | plutil -extract data.version raw -o - -- -)"
+          test "$app_version" = "$expected_version"
+          test "$cli_version" = "$expected_version"
+          test -f /Applications/WeCanFixEverything.app/Contents/Resources/Skills/ssdev-wecanfixeverything/SKILL.md
+
+          brew uninstall --cask ssdev-wecanfixeverything
+
+  verify-windows:
+    needs: publish
+    runs-on: windows-latest
+    timeout-minutes: 15
+    env:
+      RELEASE_TAG: ${{ inputs.tag || github.event.client_payload.tag }}
+    steps:
+      - name: Install twice from the public Raw URL
+        shell: powershell
+        run: |
+          $expectedVersion = $env:RELEASE_TAG.Substring("ssdev-wecanfixeverything-v".Length)
+          $installerUrl = "https://raw.githubusercontent.com/ssdev-labs/homebrew-tap/master/installers/ssdev-wecanfixeverything.ps1"
+          $versionPattern = '\[string\]\$Version = "' + [Regex]::Escape($expectedVersion) + '"'
+          $installer = $null
+          for ($attempt = 1; $attempt -le 30; $attempt++) {
+              try {
+                  $candidate = Invoke-RestMethod $installerUrl
+                  if ($candidate -match $versionPattern) {
+                      $installer = $candidate
+                      break
+                  }
+              } catch {
+                  if ($attempt -eq 30) { throw }
+              }
+              Start-Sleep -Seconds 10
+          }
+          if ($null -eq $installer) {
+              throw "The public installer did not converge to $expectedVersion."
+          }
+
+          & ([ScriptBlock]::Create($installer))
+          & ([ScriptBlock]::Create($installer))
+
+          $installDirectory = Join-Path $env:ProgramW6432 "WeCanFixEverything"
+          $cli = Join-Path $installDirectory "resources\bin\ssdev-wecanfixeverything-cli.exe"
+          $skill = Join-Path $installDirectory "resources\Skills\ssdev-wecanfixeverything\SKILL.md"
+          $actualVersion = (& $cli --json version | Out-String | ConvertFrom-Json).data.version
+          if ($actualVersion -ne $expectedVersion) {
+              throw "The installed CLI reported $actualVersion; expected $expectedVersion."
+          }
+          if (-not (Test-Path -LiteralPath $skill -PathType Leaf)) {
+              throw "The installed Agent Skill is missing."
+          }
+
+          & ([ScriptBlock]::Create($installer)) -Uninstall
+          if (Test-Path -LiteralPath $installDirectory) {
+              throw "The installation directory remains after uninstall."
+          }
