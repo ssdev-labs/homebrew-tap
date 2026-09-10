@@ -1,6 +1,6 @@
 cask "ssdev-wecanfixeverything" do
-  version "0.8.0"
-  sha256 "5f0995a49bcf83bf784c820453ef76bcaeeb3ebc582263b80e592567f8811f20"
+  version "0.9.0"
+  sha256 "6c5a69a5ebd43718775ad8c2c4cef82391551cff36515c7c952de7843891dcb3"
 
   url "https://github.com/ssdev-labs/homebrew-tap/releases/download/ssdev-wecanfixeverything-v#{version}/ssdev-wecanfixanything-macos-universal.dmg"
   name "SSDEV 临时协助"
