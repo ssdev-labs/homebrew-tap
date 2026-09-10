@@ -2,6 +2,27 @@
 
 用于发布 `ssdev-labs` 软件包的公开 Homebrew cask 和发行文件。
 
+## NoType
+
+菜单栏语音输入、翻译与 Neo 语音助手，支持 Apple Silicon、macOS 14 或更新版本。
+
+```sh
+brew install --cask ssdev-labs/tap/notype
+```
+
+安装包直接下载自 [NoType GitHub Releases](https://github.com/yahuo/NoType/releases)，Homebrew 按 Cask 中固定的 SHA-256 校验。当前包使用 Apple Development 签名，未经过 Apple 公证；首次打开若被拦截，请在「系统设置 → 隐私与安全性」中允许 NoType。
+
+Codex 功能需要有效的本机 Codex 登录。按使用的功能授予麦克风、辅助功能权限；Neo 离线唤醒还需要语音识别权限。
+
+升级和卸载：
+
+```sh
+brew upgrade --cask notype
+brew uninstall --cask notype
+```
+
+已经手动安装相同版本时，可用 `brew install --cask --adopt ssdev-labs/tap/notype` 纳入 Homebrew 管理。
+
 ## SSDEV 临时协助
 
 ### macOS
@@ -136,7 +157,8 @@ $installer = irm https://raw.githubusercontent.com/ssdev-labs/homebrew-tap/maste
 
 | 软件包 | 说明 |
 | --- | --- |
+| `notype` | 菜单栏语音输入、翻译与 Neo 语音助手。 |
 | `ssdev-wecanfixeverything` | 临时、定向、自动过期的远程排查通道。 |
 | `ssdev-cairn` | 为 Git 提交信息添加本地 AI 编程上下文。 |
 
-发行标签带有产品前缀，因此该仓库可以分发多个独立版本管理的软件包。每个可下载的分发物都在对应发行版本的校验文件中有一条记录。
+本仓库托管的发行标签带有产品前缀，因此可以分发多个独立版本管理的软件包。NoType 的安装包由其源仓库的 GitHub Releases 提供。每个可下载的分发物都在对应发行版本的校验文件中有一条记录。
