@@ -1,6 +1,6 @@
 cask "notype" do
-  version "2.0.0"
-  sha256 "a387398d3a614d0d74f085626acfa904207dd6e5bfda65c9250e9feb9a49f0d9"
+  version "2.0.1"
+  sha256 "78b55d5c99001b45d8f9ce297037e246c25779894c5076c0126cd4412e93972a"
 
   url "https://github.com/yahuo/NoType/releases/download/v#{version}/NoType-#{version}-macOS.dmg"
   name "NoType"
