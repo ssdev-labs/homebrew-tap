@@ -33,8 +33,10 @@ cask "ssdev-cairn" do
 
   binary "git-cairn"
 
-  postflight do
-    system_command "/usr/bin/xattr", args: ["-dr", "com.apple.quarantine", "#{staged_path}/git-cairn"] if OS.mac?
+  postflight_steps do
+    on_macos do
+      run "/usr/bin/xattr", args: ["-dr", "com.apple.quarantine", "{{staged_path}}/git-cairn"]
+    end
   end
 
   zap script: {
